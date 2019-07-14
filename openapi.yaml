@@ -1,0 +1,21 @@
+openapi: 3.0.0
+info:
+  title: Emptybox API Reference
+  description: |
+    This document provides API reference to Emptybox backend service.
+  version: v0.0.1
+paths:
+  /stats:
+    get:
+      description: |
+        Returns the number of all files that are stored in the system.
+      responses:
+        '200':
+          description: Number of files
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fileCount:
+                    type: integer
