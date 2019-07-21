@@ -19,3 +19,20 @@ paths:
                 properties:
                   fileCount:
                     type: integer
+  /upload:
+    post:
+      description: |
+        Save the attached file
+      responses:
+        '200':
+          description: Successful message
+          content:
+            text/plain:
+              schema:
+                type: string
+        '400':
+          description: Error responses message
+          content:
+            text/plain:
+              schema:
+                type: string
