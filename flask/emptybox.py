@@ -32,7 +32,7 @@ def upload():
         to_sign = f'PUT\n\n{content_type}\n{date}\n{resource}'
         bytes_to_sign = bytearray(to_sign, 'utf-8')
         secret_bytes = bytearray(S3_SECRET_KEY, 'utf-8')
-        signature_bytes = hmac.digest(secret_bytes, bytes_to_sign, 'sha256')
+        signature_bytes = hmac.digest(secret_bytes, bytes_to_sign, 'sha1')
         signature_b64_bytes = b2a_base64(signature_bytes, newline=False)
         signature = signature_b64_bytes.decode('utf-8')
 
@@ -43,8 +43,7 @@ def upload():
                          'Date': date,
                          'Content-Type': content_type,
                          'Content-Length': file.content_length,
-                         'Authorization':
-                             f'AWS4-HMAC-256 {S3_ACCESS_KEY}:{signature}'})
+                         'Authorization': f'AWS {S3_ACCESS_KEY}:{signature}'})
 
         response = conn.getresponse()
 
