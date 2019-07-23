@@ -19,6 +19,13 @@ paths:
                 properties:
                   fileCount:
                     type: integer
+              examples:
+                empty:
+                  summary: The server is empty
+                  value: {"fileCount": 0}
+                elite:
+                  summary: Elite number of files on server
+                  value: {"fileCount": 1337}
   /upload:
     post:
       description: |
@@ -30,9 +37,20 @@ paths:
             text/plain:
               schema:
                 type: string
+              examples:
+                success:
+                  summary: Message when file is saved successfully
+                  value: Saved
         '400':
           description: Error responses message
           content:
             text/plain:
               schema:
                 type: string
+              examples:
+                nofile:
+                  summary: Message when no file is provided
+                  value: No file provided
+                error:
+                  summary: Other errors
+                  value: Error
