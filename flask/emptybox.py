@@ -44,5 +44,7 @@ def upload():
 
 @app.route('/stats')
 def stats():
-    data = {'fileCount': 0}
+    response = s3.list_objects_v2(Bucket=S3_BUCKET)
+
+    data = {'fileCount': response['KeyCount']}
     return data
