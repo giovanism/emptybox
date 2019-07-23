@@ -1,10 +1,5 @@
-import hmac
+import boto3
 import os
-import time
-
-from binascii import b2a_base64
-from email.utils import formatdate
-from http.client import HTTPConnection
 from flask import Flask, redirect, request
 
 # Settings
@@ -14,6 +9,10 @@ S3_HOST = os.getenv('EMPTYBOX_S3_HOST')
 S3_BUCKET = os.getenv('EMPTYBOX_S3_BUCKET')
 S3_ACCESS_KEY = os.getenv('EMPTYBOX_S3_ACCESS_KEY')
 S3_SECRET_KEY = os.getenv('EMPTYBOX_S3_SECRET_KEY')
+
+s3 = boto3.client('s3', endpoint_url=f'http://{S3_HOST}/',
+                  aws_access_key_id=S3_ACCESS_KEY,
+                  aws_secret_access_key=S3_SECRET_KEY)
 
 
 @app.route('/')
@@ -25,35 +24,16 @@ def handle_default():
 def upload():
     if 'file' in request.files:
         file = request.files['file']
-        date = formatdate(time.time())
-        resource = f'/{S3_BUCKET}/{file.filename}'
-        content_type = 'application/octet-stream'
 
-        to_sign = f'PUT\n\n{content_type}\n{date}\n{resource}'
-        bytes_to_sign = bytearray(to_sign, 'utf-8')
-        secret_bytes = bytearray(S3_SECRET_KEY, 'utf-8')
-        signature_bytes = hmac.digest(secret_bytes, bytes_to_sign, 'sha1')
-        signature_b64_bytes = b2a_base64(signature_bytes, newline=False)
-        signature = signature_b64_bytes.decode('utf-8')
+        response = s3.put_object(Bucket=S3_BUCKET,
+                                 Key=file.filename,
+                                 Body=file.stream)
 
-        conn = HTTPConnection(S3_HOST)
-        conn.request('PUT', resource, body=file.stream,
-                     headers={
-                         'Host': f'{S3_BUCKET}.{S3_HOST}',
-                         'Date': date,
-                         'Content-Type': content_type,
-                         'Content-Length': file.content_length,
-                         'Authorization': f'AWS {S3_ACCESS_KEY}:{signature}'})
-
-        response = conn.getresponse()
-
-        if response.status == 200:
-            return 'Saved'
+        if response['ResponseMetadata']['HTTPStatusCode'] != 200:
+            app.logger.info(response)
+            return 'Error', 400
         else:
-            err = response.read()
-            app.logger.debug(err)
-
-            return err, response.status
+            return 'Saved'
 
     else:
         err = 'No file provided'
