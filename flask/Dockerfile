@@ -6,6 +6,7 @@ RUN ["pipenv", "install"]
 RUN pipenv run pip freeze | tee requirements.txt
 
 FROM python:3.7-alpine
+RUN apk --no-cache add gcc musl-dev zlib-dev jpeg-dev
 WORKDIR /opt
 COPY --from=0 /tmp/requirements.txt ./
 RUN ["pip", "install", "-r", "requirements.txt"]
