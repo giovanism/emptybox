@@ -30,6 +30,27 @@ paths:
     post:
       description: |
         Save the attached file
+      requestBody:
+        description: Descripting the file to be saved
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              required:
+               - type
+              properties:
+                type:
+                  type: string
+                  enum:
+                   - file
+                   - url
+                file:
+                  type: string
+                  description: Required if type is "file"
+                  format: binary
+                url:
+                  type: string
+                  description: Required if type is "url"
       responses:
         '200':
           description: Successful message
