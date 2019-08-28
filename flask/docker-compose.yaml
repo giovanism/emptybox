@@ -27,8 +27,6 @@ services:
     environment:
       - "MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE"
       - "MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-      - "MINIO_USERNAME=minio"
-      - "MINIO_GROUPNAME=minio"
     ports:
       - "9000:9000"
     volumes:
