@@ -55,23 +55,41 @@ paths:
         '200':
           description: Successful message
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    description: Descriptive response
+                  filename:
+                    description: Saved filename
+                    type: string
               examples:
                 success:
                   summary: Message when file is saved successfully
-                  value: Saved
+                  value:
+                    msg: Saved
+                    filename: 2c4560f9-613d-43f4-b7e5-190a101959d3.png
         '400':
           description: Error responses message
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    description: Descriptive response
               examples:
                 nofile:
                   summary: Message when no file is provided
-                  value: No file provided
+                  value:
+                    msg: Invalid Request
+                notype:
+                  summary: When type parameter is missing
+                  value:
+                    msg: Invalid Request
                 error:
                   summary: Other errors
                   value: Error
