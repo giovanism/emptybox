@@ -52,7 +52,8 @@ def upload():
         err = 'Invalid request'
         app.logger.debug(err)
 
-        return err, 400
+        data = {'msg': err}
+        return data, 400
 
     img = Image.open(body)
     key = gen_filename(img.format)
@@ -67,12 +68,11 @@ def upload():
         app.logger.info(response)
         return 'Error', 400
 
-    return 'Saved'
+    return {'msg': 'Saved', 'filename': key}
 
 
 @app.route('/stats')
 def stats():
     response = s3.list_objects_v2(Bucket=S3_BUCKET)
 
-    data = {'fileCount': response['KeyCount']}
-    return data
+    return {'fileCount': response['KeyCount']}
