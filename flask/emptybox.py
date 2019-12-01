@@ -82,9 +82,9 @@ def upload():
         else:
             raise KeyError
 
-    except KeyError:
-        err = 'Invalid request'
+    except KeyError as err:
         app.logger.debug(err)
+        err = 'Invalid request'
 
         data = {'msg': err}
         return data, 400
