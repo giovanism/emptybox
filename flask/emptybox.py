@@ -1,10 +1,13 @@
 import urllib3
 import boto3
+import click
 import uuid
+import json
 import cgi
 import io
 import os
 from flask import Flask, redirect, request
+from flask.cli import with_appcontext
 
 # Settings
 app = Flask(__name__)
@@ -107,3 +110,32 @@ def stats():
     response = s3.list_objects_v2(Bucket=S3_BUCKET)
 
     return {'fileCount': response['KeyCount']}
+
+
+# Scripts
+
+@click.command('init_bucket')
+@with_appcontext
+def init_bucket():
+    '''
+    Initialize the bucket used for the application.
+    '''
+    s3.create_bucket(Bucket=S3_BUCKET)
+
+    bucket_policy = {
+        'Version': '2012-10-17',
+        'Statement': [{
+            'Effect': 'Allow',
+            'Principal': '*',
+            'Action': ['s3:GetObject'],
+            'Resource': f'arn:aws:s3:::{S3_BUCKET}/*'
+        }]
+    }
+
+    bucket_policy = json.dumps(bucket_policy)
+    s3.put_bucket_policy(Bucket=S3_BUCKET, Policy=bucket_policy)
+
+    click.echo('Successfully initialized bucket')
+
+
+app.cli.add_command(init_bucket)
