@@ -1,10 +1,10 @@
 import urllib3
 import boto3
 import uuid
+import cgi
 import io
 import os
 from flask import Flask, redirect, request
-from PIL import Image
 
 # Settings
 app = Flask(__name__)
@@ -21,8 +21,33 @@ s3 = boto3.client('s3', endpoint_url=f'http://{S3_HOST}/',
 
 # Utils
 
-def gen_filename(fmt):
-    return f'{uuid.uuid4()}.{fmt.lower()}'
+def gen_key(filename):
+    '''
+    Generate UUID4 based S3 key. The generated key also account for file
+    extension for convenience.
+    >>> get_key('anime.png')
+    'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.png'
+    >>> get_key('citra.JPG')
+    'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.JPG'
+    >>> get_key('.zshrc')
+    'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.zshrc'
+    >>> get_key('Dockerfile')
+    'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+    >>> get_key('')
+    'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+    >>> get_key(None)
+    'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+    '''
+    if filename:
+        root, ext = os.path.splitext(filename)
+
+        if ext:
+            return f'{uuid.uuid4()}.{ext}'
+
+        elif root[0] == '.':
+            return f'{uuid.uuid4()}.{root}'
+
+    return  str(uuid.uuid4())
 
 
 # Handlers
@@ -38,12 +63,21 @@ def upload():
         if request.form['type'] == 'file':
             file = request.files['file']
             body = file.stream
+            filename = file.filename
 
         elif request.form['type'] == 'url':
             url = request.form['url']
             pool = urllib3.connection_from_url(url)
             response = pool.request('GET', url)
             body = io.BytesIO(response.data)
+
+            filename = None
+
+            if 'Content-Disposition' in response.headers:
+                content_disposition = response.headers['Content-Disposition']
+                value, params = cgi.parse_header(content_disposition)
+
+                filename = params.get('filename')
 
         else:
             raise KeyError
@@ -55,10 +89,7 @@ def upload():
         data = {'msg': err}
         return data, 400
 
-    img = Image.open(body)
-    key = gen_filename(img.format)
-
-    body.seek(0)
+    key = gen_key(filename)
 
     response = s3.put_object(Bucket=S3_BUCKET,
                              Key=key,
