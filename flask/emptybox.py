@@ -42,12 +42,12 @@ def gen_key(filename):
         root, ext = os.path.splitext(filename)
 
         if ext:
-            return f'{uuid.uuid4()}.{ext}'
+            return str(uuid.uuid4()) + ext
 
         elif root[0] == '.':
-            return f'{uuid.uuid4()}.{root}'
+            return str(uuid.uuid4()) + root
 
-    return  str(uuid.uuid4())
+    return str(uuid.uuid4())
 
 
 # Handlers
