@@ -28,17 +28,17 @@ def gen_key(filename):
     '''
     Generate UUID4 based S3 key. The generated key also account for file
     extension for convenience.
-    >>> get_key('anime.png')
+    >>> gen_key('anime.png')
     'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.png'
-    >>> get_key('citra.JPG')
+    >>> gen_key('citra.JPG')
     'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.JPG'
-    >>> get_key('.zshrc')
+    >>> gen_key('.zshrc')
     'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.zshrc'
-    >>> get_key('Dockerfile')
+    >>> gen_key('Dockerfile')
     'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
-    >>> get_key('')
+    >>> gen_key('')
     'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
-    >>> get_key(None)
+    >>> gen_key(None)
     'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
     '''
     if filename:
@@ -47,7 +47,7 @@ def gen_key(filename):
         if ext:
             return str(uuid.uuid4()) + ext
 
-        elif root[0] == '.':
+        if root[0] == '.':
             return str(uuid.uuid4()) + root
 
     return str(uuid.uuid4())
