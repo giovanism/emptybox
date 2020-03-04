@@ -41,6 +41,8 @@ func index(w http.ResponseWriter, r *http.Request) {
 
 func upload(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
+		jsonEnc := json.NewEncoder(w)
+
 		uploadType := r.FormValue("type")
 		var uploadFile io.ReadCloser
 		var fileName string
@@ -52,7 +54,6 @@ func upload(w http.ResponseWriter, r *http.Request) {
 					errData := map[string]string{"msg": "Invalid Request"}
 
 					w.WriteHeader(http.StatusBadRequest)
-					jsonEnc := json.NewEncoder(w)
 					jsonEnc.Encode(errData)
 				}
 			}
@@ -95,15 +96,24 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		key := genKey(fileName)
 		input := s3.PutObjectInput{Bucket: &s3Bucket, Key: &key, Body: body}
 		s3client.PutObject(&input)
-	}
 
-	w.WriteHeader(http.StatusMethodNotAllowed)
+		saveData := map[string]string{
+			"msg":      "Saved",
+			"filename": key,
+		}
+
+		jsonEnc.Encode(saveData)
+
+	} else {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
 }
 
 func stats(w http.ResponseWriter, r *http.Request) {
 	input := s3.ListObjectsV2Input{Bucket: &s3Bucket}
 	ls, err := s3client.ListObjectsV2(&input)
 	if err != nil {
+		fmt.Println(err.Error())
 		panic(err)
 	}
 
@@ -113,15 +123,15 @@ func stats(w http.ResponseWriter, r *http.Request) {
 	jsonEnc.Encode(statsData)
 }
 
-func ServeHTTP() {
+func ServeHTTP(bindAddress string) {
 	server := http.NewServeMux()
 	server.HandleFunc("/", index)
 	server.HandleFunc("/upload/", upload)
 	server.HandleFunc("/stats/", stats)
 
 	log.Print("========================= emptybox =========================")
-	log.Printf("Server starting at %s\n", defaultListenAddress)
-	http.ListenAndServe(defaultListenAddress, server)
+	log.Printf("Server starting at %s\n", bindAddress)
+	http.ListenAndServe(bindAddress, server)
 }
 
 // genKey generate UUID4 based S3 key. The generated key also account for file
@@ -130,6 +140,7 @@ func genKey(key string) string {
 	u, err := uuid.NewRandom()
 
 	if err != nil {
+		fmt.Println(err.Error())
 		panic(err)
 	}
 
@@ -163,12 +174,17 @@ func setAWSCredentialsEnv() {
 }
 
 func newS3Client() *s3.S3 {
-	setAWSCredentialsEnv()
-	cfg := aws.NewConfig()
-	cfg.WithCredentials(credentials.NewEnvCredentials())
+	// Configure to use MinIO Server
+	s3Config := &aws.Config{
+		Credentials:      credentials.NewStaticCredentials(s3AccessKey, s3SecretKey, ""),
+		Endpoint:         aws.String(s3Host),
+		Region:           aws.String("us-east-1"),
+		DisableSSL:       aws.Bool(true),
+		S3ForcePathStyle: aws.Bool(true),
+	}
 
-	sess := session.New(cfg)
-	return s3.New(sess)
+	newSession := session.New(s3Config)
+	return s3.New(newSession)
 }
 
 func InitBucket() {
@@ -177,6 +193,7 @@ func InitBucket() {
 	})
 
 	if err != nil {
+		fmt.Println(err.Error())
 		panic(err)
 	}
 
@@ -208,6 +225,7 @@ func InitBucket() {
 	})
 
 	if err != nil {
+		fmt.Println(err.Error())
 		panic(err)
 	}
 }
