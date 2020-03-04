@@ -9,4 +9,4 @@ FROM alpine
 
 COPY --from=0 /go/src/github.com/giovanism/emptybox/go/emptybox /go/bin/emptybox
 
-CMD ["/go/bin/emptybox"]
+CMD ["/go/bin/emptybox", "-bind", "0.0.0.0:8000"]

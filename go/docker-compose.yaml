@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  api:
+    build: .
+    image: giovanism/emptybox:go-dev
+    restart: always
+    environment:
+      - "MAIN_SITE=http://localhost:3000/"
+      - "EMPTYBOX_S3_HOST=s3:9000"
+      - "EMPTYBOX_S3_BUCKET=emptybox"
+      - "EMPTYBOX_S3_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE"
+      - "EMPTYBOX_S3_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+    ports:
+      - "8000:8000"
+    networks:
+      default:
+      internal:
+  web:
+    image: nginx:1.17.1-alpine
+    ports:
+      - "3000:80"
+    networks:
+      default:
+  s3:
+    image: minio/minio
+    environment:
+      - "MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE"
+      - "MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+    ports:
+      - "9000:9000"
+    volumes:
+      - .data/s3:/data
+    networks:
+      default:
+      internal:
+    command: [server, /data]
+
+networks:
+  default:
+  internal:
+    internal: true
